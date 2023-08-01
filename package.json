@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json.schemastore.org/package",
+  "name": "zilaws-client",
+  "version": "0.0.1",
+  "description": "ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between clientside and serverside using eventhandlers and async waiters.",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "umd:main": "dist/umd/index.js",
+  "types": "dist/types/index.d.js",
+  "browser": "dist/umd/index.js",
+  "scripts": {
+    "build": "npm run format:fix && npm run test:cov-build && npm run format:fix && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
+    "build:cjs": "rimraf ./dist/cjs && tsc -p config/tsconfig.cjs.json",
+    "build:esm": "rimraf ./dist/esm && tsc -p config/tsconfig.esm.json",
+    "build:umd": "rimraf ./dist/umd && webpack --config config/webpack.config.js",
+    "build:types": "rimraf ./dist/types && tsc -p config/tsconfig.types.json",
+    "clean": "rimraf ./dist/cjs ./dist/esm ./dist/umd ./dist/types",
+    "package": "npm run build && npm pack",
+    "test": "jest --no-cache --runInBand",
+    "test:cov": "jest --coverage --no-cache --runInBand && start ./coverage/lcov-report/index.html",
+    "test:cov-build": "jest --coverage --no-cache --runInBand && jest-coverage-badges-ts --output \"./.coverage-badges\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "comver": "node tools/versionManager.js",
+    "prepublishOnly": "npm run build && npm run package"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "websocket",
+    "client",
+    "connection",
+    "library",
+    "eventhandler",
+    "waiter",
+    "async",
+    "tcp",
+    "realtime",
+    "browser",
+    "node",
+    "typescript",
+    "events"
+  ],
+  "author": "warstekhun",
+  "license": "MIT",
+  "homepage": "https://github.com/ZilaWS/client",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ZilaWS/client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ZilaWS/client"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "@types/uuid": "^9.0.2",
+    "@types/websocket": "^1.0.5",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.2.0",
+    "jest-coverage-badges-ts": "^0.1.8",
+    "prettier": "^2.4.0",
+    "prompt": "^1.3.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^27.0.5",
+    "ts-loader": "^9.2.5",
+    "typescript": "^4.4.3",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^4.8.0"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0",
+    "websocket": "^1.0.34"
+  }
+}
