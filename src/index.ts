@@ -1,32 +1,13 @@
-#!/usr/bin/env node
 /**
  * @file ZilaWS
  * @module ZilaWs
  * @license
  * MIT License
- * Copyright (c) 2022 Levente Balogh
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright (c) 2023 ZilaWS
  */
-
-import { w3cwebsocket } from "websocket";
+import { WebSocket } from "ws";
 import { v4 as randomUUID } from "uuid";
+import { CloseCodes } from "./CloseCodes";
 
 let errorHappened = false;
 
@@ -48,7 +29,26 @@ interface WSMessage {
 }
 
 interface ICallableLocalEvents {
+  /**
+   * Runs when the client's connection status changes
+   * @param newValue
+   * @returns
+   */
   onStatusChange: (newValue: WSStatus) => void;
+
+  /**
+   * Runs after the client processes a newly recieved message
+   * @param message Already processed message
+   * @returns
+   */
+  onMessageRecieved: (message: any) => void;
+
+  /**
+   * Runs before the client processes a newly recieved message
+   * @param message
+   * @returns
+   */
+  onRawMessageRecieved: (message: string) => void;
 }
 
 export class ZilaConnection {
@@ -56,7 +56,7 @@ export class ZilaConnection {
   private localEventCallbacks: {
     [K in keyof ICallableLocalEvents]?: Array<ICallableLocalEvents[K]>;
   } = {};
-  private connection: w3cwebsocket | undefined;
+  private connection: WebSocket | undefined;
   private errorCallback: errorCallbackType | undefined;
   private _status: WSStatus = WSStatus.OPENING;
 
@@ -64,7 +64,7 @@ export class ZilaConnection {
     return this._status;
   }
 
-  public set status(v: WSStatus) {
+  private set status(v: WSStatus) {
     this._status = v;
     if (this.localEventCallbacks.onStatusChange && this.localEventCallbacks.onStatusChange.length > 0) {
       for (const callback of this.localEventCallbacks.onStatusChange) {
@@ -84,31 +84,37 @@ export class ZilaConnection {
    * @param errorCallback This callback will be executed if an error occurs.
    * @returns {Promise<ZilaConnection>}
    */
-  public static async connectTo(wsUrl: string, errorCallback?: errorCallbackType): Promise<ZilaConnection> {
-    return new Promise(async (resolve) => {
-      let ws: w3cwebsocket | undefined;
+  public static async connectTo(
+    wsUrl: string,
+    errorCallback?: errorCallbackType,
+    allowSelfSignedCert = false
+  ): Promise<ZilaConnection> {
+    return new Promise(async (resolve, reject) => {
+      let ws: WebSocket | undefined;
 
       try {
-        ws = new w3cwebsocket(wsUrl);
+        ws = new WebSocket(wsUrl, {
+          rejectUnauthorized: !allowSelfSignedCert,
+        });
       } catch (error) {
-        console.error("Couldn't connect to the WebSocket server.");
-        console.error(error);
+        const errorMessage = (error as Error).stack?.split("\n")[0];
+        if (error && errorCallback) errorCallback(errorMessage);
+        reject(errorMessage);
+        return;
       }
 
       const socket = new ZilaConnection(ws, errorCallback);
-      socket.onceEventListener("onStatusChange", () => {
-        resolve(socket);
+      socket.onceEventListener("onStatusChange", (status) => {
+        if (ws && [WSStatus.CLOSED, WSStatus.ERROR].includes(status)) {
+          reject("Couldn't connect to the WebSocket server.");
+        } else {
+          resolve(socket);
+        }
       });
     });
   }
 
-  private constructor(ws: w3cwebsocket | undefined, errorCallback?: errorCallbackType) {
-    if (ws == undefined) {
-      this._status = WSStatus.ERROR;
-      if (errorCallback) errorCallback("Couldn't estabilish connection to WebSocket server.");
-      return this;
-    }
-
+  private constructor(ws: WebSocket, errorCallback?: errorCallbackType) {
     this.connection = ws;
     this.errorCallback = errorCallback;
     this._status = WSStatus.OPENING;
@@ -116,18 +122,24 @@ export class ZilaConnection {
     this.connection.onerror = async (event) => {
       this.status = WSStatus.ERROR;
 
-      if (this.errorCallback) {
-        this.errorCallback(undefined);
-      }
+      this.errorCallback?.call(undefined);
 
       console.error("Disconnected from WebSocket server.");
-      console.error(event.message);
     };
 
     this.connection.onopen = () => {
       this.status = WSStatus.OPEN;
+    };
 
-      console.log("Successfully connected to the WebSocket server.");
+    this.connection.onclose = (ev) => {
+      if (ev.code == CloseCodes.BANNED) {
+        console.error("ZilaWS: The client is banned from the WebSocket server.");
+      } else if (ev.code == CloseCodes.KICKED) {
+        console.error("ZilaWS: The client got disconnected from the server.");
+      }
+
+      this.status = WSStatus.CLOSED;
+      if (this.errorCallback) this.errorCallback(ev.reason);
     };
 
     this.connection.onmessage = (ev: any) => {
@@ -140,39 +152,31 @@ export class ZilaConnection {
    * @param {string} msg The raw websocket message
    */
   private async callEventHandler(msg: string) {
+    if (this.localEventCallbacks.onRawMessageRecieved) {
+      for (const cb of this.localEventCallbacks.onRawMessageRecieved) {
+        cb(msg);
+      }
+    }
+
     const msgObj: WSMessage = JSON.parse(msg);
 
     if (!errorHappened) {
       errorHappened = true;
-      if (msgObj.identifier == "[ZilaWS]:Banned") {
-        console.error("The client is banned from the WebSocket server.");
-        if (this.errorCallback !== undefined) {
-          this.errorCallback(msgObj.message !== null ? msgObj.message[0] : undefined);
-          if (msgObj.callbackId) this.send(msgObj.callbackId, true);
-        }
-      } else if (msgObj.identifier == "[ZilaWS]:Kicked") {
-        console.error("The client got disconnected from the server.");
-        if (this.errorCallback !== undefined) {
-          this.errorCallback(msgObj.message !== null ? msgObj.message[0] : undefined);
-          if (msgObj.callbackId) this.send(msgObj.callbackId, true);
-        }
+    }
+
+    if (this.localEventCallbacks.onMessageRecieved) {
+      for (const cb of this.localEventCallbacks.onMessageRecieved) {
+        cb(msgObj.message);
       }
     }
 
     const callback = this.callbacks[msgObj.identifier];
     if (callback !== undefined && callback !== null && msgObj.message) {
-      if (msgObj.callbackId && msgObj.callbackId != null) {
-        Promise.resolve(callback(...msgObj.message)).then((val) => {
-          if (!msgObj.callbackId) return;
-          if (val === undefined) {
-            this.send(msgObj.callbackId);
-          } else {
-            this.send(msgObj.callbackId, val);
-          }
-        });
-      } else {
-        callback(...msgObj.message);
-      }
+      Promise.resolve(callback(...msgObj.message)).then((val) => {
+        if (msgObj.callbackId && msgObj.callbackId != null) {
+          this.send(msgObj.callbackId, val);
+        }
+      });
     }
   }
 
@@ -209,8 +213,7 @@ export class ZilaConnection {
 
       const uuid = randomUUID();
 
-      this.registerMessageHandler(uuid, (args: any): void => {
-        this.removeMessageHandler(uuid);
+      this.onceMessageHandler(uuid, (args: any): void => {
         resolve(args);
       });
 
@@ -236,7 +239,7 @@ export class ZilaConnection {
   public addEventListener<K extends keyof ICallableLocalEvents>(eventType: K, callback: ICallableLocalEvents[K]) {
     let array = this.localEventCallbacks[eventType];
     if (array != undefined) {
-      if (array.findIndex((el) => el == callback)) {
+      if (array.findIndex((el) => el === callback) >= 0) {
         throw new Error(`${eventType} listener already has this callback added to it.`);
       }
     } else {
@@ -256,15 +259,10 @@ export class ZilaConnection {
     callback: ICallableLocalEvents[K]
   ) {
     let array = this.localEventCallbacks[eventType];
-    if (!array) {
-      console.warn(`There is no callback registered for ${eventType}`);
-      return;
-    }
+    if (!array) return;
 
     const id = array.indexOf(callback);
-    if (id == -1) {
-      throw new ReferenceError("EventListener doesn't exist with the given eventName and callback!");
-    }
+    if (id == -1) return;
 
     array.splice(id, 1);
 
@@ -291,13 +289,11 @@ export class ZilaConnection {
 
   /**
    * Registers an eventhandler on the clientside that'll run when the server asks for it.
+   * Can get overrided with using the same identifier.
    * @param identifier The eventhandler's name. **Must not start with `[ZilaWS]:`!**
    * @param callback The eventhandler.
    */
-  public registerMessageHandler(identifier: string, callback: ZilaWSCallback): void {
-    if (identifier.startsWith("[ZilaWS]:")) {
-      console.error("MessageHandlers' identifiers must not start with [ZilaWS]:");
-    }
+  public setMessageHandler(identifier: string, callback: ZilaWSCallback): void {
     this.callbacks[identifier] = callback;
   }
 
@@ -315,9 +311,13 @@ export class ZilaConnection {
    * @param callback
    */
   public onceMessageHandler(identifier: string, callback: ZilaWSCallback): void {
-    this.callbacks[identifier] = (...args: any[]) => {
+    this.callbacks[identifier] = async (...args: any[]) => {
       this.removeMessageHandler(identifier);
-      callback(...args);
+      //const ret = callback(...args);
+
+      const ret = await Promise.resolve(callback(...args));
+
+      return ret;
     };
   }
 
@@ -333,8 +333,34 @@ export class ZilaConnection {
     });
   }
 
+  /**
+   * Disconnect from the WS server
+   */
   public disconnect(): void {
     this.connection?.close();
+  }
+
+  /**
+   * Disconnects the client asynchronously
+   * @param reason
+   * @returns
+   */
+  public disconnectAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.connection || this.status == WSStatus.CLOSED) {
+        console.error("The websocket is already disconnected.");
+        resolve();
+        return;
+      }
+
+      this.onceEventListener("onStatusChange", (status) => {
+        if (status == WSStatus.CLOSED) {
+          resolve();
+        }
+      });
+
+      this.connection.close();
+    });
   }
 }
 
@@ -349,14 +375,14 @@ export class ZilaConnection {
  * @param errorCallback This callback will be executed if an error occurs.
  * @returns {Promise<ZilaConnection>}
  */
-export async function connectTo(wsUrl: string, errorCallback?: errorCallbackType): Promise<ZilaConnection> {
+export default async function connectTo(
+  wsUrl: string,
+  errorCallback?: errorCallbackType
+): Promise<ZilaConnection> {
   return ZilaConnection.connectTo(wsUrl, errorCallback);
 }
-
-const exporter = {
-  connectTo: connectTo,
-  WSStatus: WSStatus,
-  ZilaConnection: ZilaConnection,
-};
-
-export default exporter;
+// const exporter = {
+//   connectTo: connectTo,
+//   WSStatus: WSStatus,
+//   ZilaConnection: ZilaConnection,
+// };
