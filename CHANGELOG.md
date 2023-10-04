@@ -1,0 +1,1 @@
+- Fixed an issue with NPM releasing
