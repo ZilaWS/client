@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package",
   "name": "zilaws-client",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between clientside and serverside using eventhandlers and async waiters.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -15,14 +15,13 @@
     "build:umd": "rimraf ./dist/umd && webpack --config config/webpack.config.js",
     "build:types": "rimraf ./dist/types && tsc -p config/tsconfig.types.json",
     "clean": "rimraf ./dist/cjs ./dist/esm ./dist/umd ./dist/types",
-    "package": "npm run build && npm pack",
     "test": "jest --no-cache --runInBand",
     "test:cov": "jest --coverage --no-cache --runInBand",
     "test:cov-browser": "jest --coverage --no-cache --runInBand && start ./coverage/lcov-report/index.html",
     "test:cov-build": "jest --coverage --no-cache --runInBand && jest-coverage-badges-ts --output \"./.coverage-badges\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "release": "rimraf ./*.tgz -g && npm run package && node tools/versionManager.js"
+    "release": "rimraf ./*.tgz -g && npm run build && node tools/versionManager.js"
   },
   "files": [
     "dist"
