@@ -1,4 +1,4 @@
-import connectTo, { WSStatus, ZilaConnection } from "../src/index";
+import { connectTo, WSStatus, ZilaConnection } from "../src/index";
 import ZilaServer, { ZilaClient } from "zilaws-server";
 
 var client: ZilaConnection;

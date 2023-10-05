@@ -375,10 +375,7 @@ export class ZilaConnection {
  * @param errorCallback This callback will be executed if an error occurs.
  * @returns {Promise<ZilaConnection>}
  */
-export default async function connectTo(
-  wsUrl: string,
-  errorCallback?: errorCallbackType
-): Promise<ZilaConnection> {
+export async function connectTo(wsUrl: string, errorCallback?: errorCallbackType): Promise<ZilaConnection> {
   return ZilaConnection.connectTo(wsUrl, errorCallback);
 }
 // const exporter = {
