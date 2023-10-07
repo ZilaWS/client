@@ -56,7 +56,7 @@ export class ZilaConnection {
   private localEventCallbacks: {
     [K in keyof ICallableLocalEvents]?: Array<ICallableLocalEvents[K]>;
   } = {};
-  private connection: WebSocket | undefined;
+  private connection: WebSocket | globalThis.WebSocket | undefined;
   private errorCallback: errorCallbackType | undefined;
   private _status: WSStatus = WSStatus.OPENING;
 
@@ -90,12 +90,17 @@ export class ZilaConnection {
     allowSelfSignedCert = false
   ): Promise<ZilaConnection> {
     return new Promise(async (resolve, reject) => {
-      let ws: WebSocket | undefined;
+      let ws: WebSocket | globalThis.WebSocket | undefined;
 
       try {
-        ws = new WebSocket(wsUrl, {
-          rejectUnauthorized: !allowSelfSignedCert,
-        });
+        /* istanbul ignore next */
+        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
+          ws = new window.WebSocket(wsUrl);
+        } else {
+          ws = new WebSocket(wsUrl, {
+            rejectUnauthorized: !allowSelfSignedCert,
+          });
+        }
       } catch (error) {
         const errorMessage = (error as Error).stack?.split("\n")[0];
         if (error && errorCallback) errorCallback(errorMessage);
@@ -114,12 +119,12 @@ export class ZilaConnection {
     });
   }
 
-  private constructor(ws: WebSocket, errorCallback?: errorCallbackType) {
+  private constructor(ws: WebSocket | globalThis.WebSocket, errorCallback?: errorCallbackType) {
     this.connection = ws;
     this.errorCallback = errorCallback;
     this._status = WSStatus.OPENING;
 
-    this.connection.onerror = async (event) => {
+    this.connection.onerror = async () => {
       this.status = WSStatus.ERROR;
 
       this.errorCallback?.call(undefined);
@@ -131,15 +136,15 @@ export class ZilaConnection {
       this.status = WSStatus.OPEN;
     };
 
-    this.connection.onclose = (ev) => {
-      if (ev.code == CloseCodes.BANNED) {
+    this.connection.onclose = ({ code, reason }: { code: number; reason: string }) => {
+      if (code == CloseCodes.BANNED) {
         console.error("ZilaWS: The client is banned from the WebSocket server.");
-      } else if (ev.code == CloseCodes.KICKED) {
+      } else if (code == CloseCodes.KICKED) {
         console.error("ZilaWS: The client got disconnected from the server.");
       }
 
       this.status = WSStatus.CLOSED;
-      if (this.errorCallback) this.errorCallback(ev.reason);
+      if (this.errorCallback) this.errorCallback(reason);
     };
 
     this.connection.onmessage = (ev: any) => {

@@ -1,17 +1,2 @@
-- Fixed an issue importing the library.
-
-## Breaking Changes
-
-### New importing
-From now on, there is no default export.
-
-ESM
-
-```ts
-import { connectTo } from "zilaws-client";
-```
-
-CommonJS
-```ts
-const { connectTo } = require("zilaws-client");
-```
+- Fixed an issue that made ZilaWS uncompatible with browsers.
+- Fixed an issue that because of VSCode wanted to import the types by default.
