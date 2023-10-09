@@ -1,2 +1,1 @@
-- Fixed an issue that made ZilaWS uncompatible with browsers.
-- Fixed an issue that because of VSCode wanted to import the types by default.
+- README changes

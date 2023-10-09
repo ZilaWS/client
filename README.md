@@ -22,6 +22,10 @@
     <a href="https://zilaws.com" target="_blank" rel="noopener noreferrer">Documentation</a>
 </h2>
 
+<h2 style="text-align: center">Looking for the <a href="https://www.npmjs.com/package/zilaws-server" target="_blank" rel="noopener noreferrer">zilaws-server</a> package?</h2>
+
+<p>ZilaWS can estabilish WS connection to a non zilaws server, but won't work as expected.</p>
+
 <h2>
 Waiter example
 </h2>

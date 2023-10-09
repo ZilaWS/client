@@ -35,10 +35,6 @@ module.exports = {
       new TerserPlugin()
     ]
   },
-  externalsType: 'self',
-  externals: {
-    ws: 'WebSocket'
-  },
   resolve: {
     extensions: ['.ts', '.js', '.tsx', '.jsx'],
   }
