@@ -49,6 +49,20 @@ interface ICallableLocalEvents {
    * @returns
    */
   onRawMessageRecieved: (message: string) => void;
+
+  /**
+   * Runs when the server sends down one or multiple new cookies.
+   * @param cookieString
+   * @returns
+   */
+  onCookieSet: (cookieString: string) => void;
+
+  /**
+   * Runs when the server deletes a cookie
+   * @param cookieName
+   * @returns
+   */
+  onCookieDelete: (cookieName: string) => void;
 }
 
 export class ZilaConnection {
@@ -147,7 +161,7 @@ export class ZilaConnection {
       if (this.errorCallback) this.errorCallback(reason);
     };
 
-    this.connection.onmessage = (ev: any) => {
+    this.connection.onmessage = (ev: MessageEvent<any>) => {
       this.callEventHandler(ev.data.toString());
     };
   }
@@ -165,8 +179,32 @@ export class ZilaConnection {
 
     const msgObj: WSMessage = JSON.parse(msg);
 
-    if (!errorHappened) {
-      errorHappened = true;
+    if (msgObj.identifier[0] == "@") {
+      if (msgObj.identifier == "@SetCookie") {
+        /* istanbul ignore next */
+        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
+          const cookieString = msgObj.message as unknown as string;
+          document.cookie = cookieString;
+
+          if (this.localEventCallbacks.onCookieSet)
+            for (const cb of this.localEventCallbacks.onCookieSet) {
+              cb(cookieString);
+            }
+        }
+      } else if (msgObj.identifier == "@DelCookie") {
+        /* istanbul ignore next */
+        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
+          const cookieName = msgObj.message as unknown as string;
+          document.cookie = `${cookieName}=; expires=${new Date(0)}; path=/;`;
+
+          if (this.localEventCallbacks.onCookieDelete)
+            for (const cb of this.localEventCallbacks.onCookieDelete) {
+              cb(cookieName);
+            }
+        }
+      }
+
+      return;
     }
 
     if (this.localEventCallbacks.onMessageRecieved) {
