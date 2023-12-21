@@ -107,12 +107,16 @@ export class ZilaConnection {
       let ws: WebSocket | globalThis.WebSocket | undefined;
 
       try {
+        //Can't test this with Node.
         /* istanbul ignore next */
         if (typeof window !== "undefined" && typeof window.document !== "undefined") {
           ws = new window.WebSocket(wsUrl);
         } else {
           ws = new WebSocket(wsUrl, {
             rejectUnauthorized: !allowSelfSignedCert,
+            headers: {
+              "s-type": 1
+            }
           });
         }
       } catch (error) {
