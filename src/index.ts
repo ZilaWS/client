@@ -111,13 +111,24 @@ export class ZilaConnection {
         /* istanbul ignore next */
         if (typeof window !== "undefined" && typeof window.document !== "undefined") {
           ws = new window.WebSocket(wsUrl);
+          ws.onerror = (ev) => {
+            console.error(JSON.stringify(ev));
+            errorCallback?.call(ev.type);
+            console.error("Disconnected from WebSocket server.");
+          };
         } else {
           ws = new WebSocket(wsUrl, {
             rejectUnauthorized: !allowSelfSignedCert,
             headers: {
-              "s-type": 1
-            }
+              "s-type": 1,
+            },
           });
+
+          ws.onerror = (ev) => {
+            console.error(JSON.stringify(ev));
+            errorCallback?.call(ev.message);
+            console.error("Disconnected from WebSocket server.");
+          };
         }
       } catch (error) {
         const errorMessage = (error as Error).stack?.split("\n")[0];
@@ -142,13 +153,13 @@ export class ZilaConnection {
     this.errorCallback = errorCallback;
     this._status = WSStatus.OPENING;
 
-    this.connection.onerror = async () => {
+    /*this.connection.onerror = async () => {
       this.status = WSStatus.ERROR;
 
       this.errorCallback?.call(undefined);
 
-      console.error("Disconnected from WebSocket server.");
-    };
+      
+    };*/
 
     this.connection.onopen = () => {
       this.status = WSStatus.OPEN;
@@ -183,9 +194,9 @@ export class ZilaConnection {
 
     const msgObj: WSMessage = JSON.parse(msg);
 
+    /* istanbul ignore next */
     if (msgObj.identifier[0] == "@") {
       if (msgObj.identifier == "@SetCookie") {
-        /* istanbul ignore next */
         if (typeof window !== "undefined" && typeof window.document !== "undefined") {
           const cookieString = msgObj.message as unknown as string;
           document.cookie = cookieString;
@@ -196,7 +207,6 @@ export class ZilaConnection {
             }
         }
       } else if (msgObj.identifier == "@DelCookie") {
-        /* istanbul ignore next */
         if (typeof window !== "undefined" && typeof window.document !== "undefined") {
           const cookieName = msgObj.message as unknown as string;
           document.cookie = `${cookieName}=; expires=${new Date(0)}; path=/;`;

@@ -85,7 +85,7 @@ describe("WebSocket connection", () => {
     clientSocket.setCookie({
       name: "MyCookie",
       value: "ExampleValue",
-      path: "/"
+      path: "/",
     });
   });
 
