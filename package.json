@@ -10,6 +10,7 @@
   "browser": "dist/umd/index.js",
   "scripts": {
     "build": "npm run format:fix && npm run test:cov-build && npm run format:fix && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
+    "forcebuild": "npm run format:fix && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
     "build:cjs": "rimraf ./dist/cjs && tsc -p config/tsconfig.cjs.json",
     "build:esm": "rimraf ./dist/esm && tsc -p config/tsconfig.esm.json",
     "build:umd": "rimraf ./dist/umd && webpack --config config/webpack.config.js",

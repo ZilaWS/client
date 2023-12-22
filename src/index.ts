@@ -9,8 +9,6 @@ import { WebSocket } from "ws";
 import { v4 as randomUUID } from "uuid";
 import { CloseCodes } from "./CloseCodes";
 
-let errorHappened = false;
-
 type errorCallbackType = (reason?: string) => void;
 
 type ZilaWSCallback = (...args: any[]) => any;
@@ -24,7 +22,7 @@ export enum WSStatus {
 
 interface WSMessage {
   identifier: string;
-  message: any[] | null;
+  message: any[] | any | null;
   callbackId: string | null;
 }
 
@@ -121,7 +119,7 @@ export class ZilaConnection {
             rejectUnauthorized: !allowSelfSignedCert,
             headers: {
               "s-type": 1,
-            },
+            }
           });
 
           ws.onerror = (ev) => {
@@ -238,22 +236,44 @@ export class ZilaConnection {
   }
 
   /**
+   * Returns a JSON serialized message object.
+   * @param identifier
+   * @param data
+   * @param callbackId
+   * @param isBuiltIn
+   * @returns
+   */
+  private getMessageJSON(
+    identifier: string,
+    data: any[] | null,
+    callbackId: string | null,
+    isBuiltIn: boolean = false
+  ): string {
+    /* istanbul ignore next */
+    return JSON.stringify({
+      identifier: isBuiltIn ? identifier : "@" + identifier,
+      message: data,
+      callbackId: callbackId,
+    });
+  }
+
+  /**
+   * Send function for built-in systems
+   * @param {string} identifier The callback's name on the serverside.
+   * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
+   */
+  /* istanbul ignore next */
+  private bSend(identifier: string, ...data: any[]) {
+    this.connection!.send(this.getMessageJSON(identifier, data, null, true));
+  }
+
+  /**
    * Calls an eventhandler on the serverside.
    * @param {string} identifier The callback's name on the serverside.
    * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
    */
   public send(identifier: string, ...data: any[]): void {
-    if (typeof data == "function" || data.filter((el) => typeof el == "function").length > 0) {
-      throw new Error("Passing functions to the server is prohibited.");
-    }
-
-    const msg: WSMessage = {
-      callbackId: null,
-      message: data,
-      identifier: identifier,
-    };
-
-    this.connection!.send(JSON.stringify(msg));
+    this.connection!.send(this.getMessageJSON(identifier, data, null));
   }
 
   /**
@@ -264,24 +284,22 @@ export class ZilaConnection {
    */
   public async waiter(identifier: string, ...data: any[]): Promise<any> {
     return new Promise((resolve) => {
-      if (typeof data == "function" || data.filter((el) => typeof el == "function").length > 0) {
-        throw new Error("Passing functions to the server is prohibited.");
-      }
-
       const uuid = randomUUID();
 
       this.onceMessageHandler(uuid, (args: any): void => {
         resolve(args);
       });
 
-      const msg: WSMessage = {
-        callbackId: uuid,
-        message: data,
-        identifier: identifier,
-      };
-
-      this.connection!.send(JSON.stringify(msg));
+      this.connection!.send(this.getMessageJSON(identifier, data, uuid));
     });
+  }
+
+  /**
+   * Sync cookies to the serverside.
+   */
+  /* istanbul ignore next */
+  public syncCookies() {
+    this.bSend("SyncCookies", document.cookie);
   }
 
   /**

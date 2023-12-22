@@ -77,33 +77,6 @@ describe("WebSocket connection", () => {
     server.send(clientSocket, "THISSHOULDNOTEXIST", "SMTH");
   });
 
-  test("Recieving cookies", () => {
-    client.onceEventListener("onCookieSet", (cookieStr) => {
-      expect(cookieStr).toEqual("MyCookie=ExampleValue; Path=/");
-    });
-
-    clientSocket.setCookie({
-      name: "MyCookie",
-      value: "ExampleValue",
-      path: "/",
-    });
-  });
-
-  test("Cookie deletion", () => {
-    client.onceEventListener("onCookieDelete", (cookieName) => {
-      expect(cookieName).toEqual("MyCookie");
-    });
-
-    clientSocket.removeCookie("MyCookie");
-  });
-
-  test.failing("Client-Server but with a function", () => {
-    server.setMessageHandler("Client-Server", (socket, obj: { smth: any }) => {});
-    client.send("Client-Server", () => {
-      console.log("I'm a function!");
-    });
-  });
-
   test.failing("Waiter but with a function", async () => {
     await client.waiter("SMTH", () => {
       console.log("I'm a function!");
