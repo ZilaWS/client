@@ -77,6 +77,23 @@ describe("WebSocket connection", () => {
     server.send(clientSocket, "THISSHOULDNOTEXIST", "SMTH");
   });
 
+  test("Client Async Waiter but no response", async () => {
+    expect(await client.waiter("This doesn't exist", "sampleData")).toBe(undefined);
+  });
+
+  test("Client Async WaiterTimeout", async () => {
+    server.setMessageHandler("WaiterTimeout", (socket, data: string) => {
+      expect(data).toEqual("sampleData")
+      return data + " success";
+    });
+
+    expect(await client.waiterTimeout("WaiterTimeout", 80, "sampleData")).toBe("sampleData success");
+  });
+
+  test("Client Async WaiterTimeout but no response", async () => {
+    expect(await client.waiterTimeout("This doesn't exist", 80, "sampleData")).toBe(undefined);
+  });
+
   test.failing("Multiple EventListeners with same credintals", () => {
     client.addEventListener("onStatusChange", func);
     client.addEventListener("onStatusChange", func);
