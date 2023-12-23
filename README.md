@@ -1,5 +1,5 @@
 # ZilaWS Client
-### ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between clientside and serverside using eventhandlers and async waiters.
+### ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between client-side and server-side using eventhandlers and async waiters.
 
 
 <div style="text-align: center;">

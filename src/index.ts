@@ -119,7 +119,7 @@ export class ZilaConnection {
             rejectUnauthorized: !allowSelfSignedCert,
             headers: {
               "s-type": 1,
-            }
+            },
           });
 
           ws.onerror = (ev) => {
@@ -251,7 +251,7 @@ export class ZilaConnection {
 
   /**
    * Send function for built-in systems
-   * @param {string} identifier The callback's name on the serverside.
+   * @param {string} identifier The callback's name on the server-side.
    * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
    */
   /* istanbul ignore next */
@@ -260,8 +260,8 @@ export class ZilaConnection {
   }
 
   /**
-   * Calls an eventhandler on the serverside.
-   * @param {string} identifier The callback's name on the serverside.
+   * Calls an eventhandler on the server-side.
+   * @param {string} identifier The callback's name on the server-side.
    * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
    */
   public send(identifier: string, ...data: any[]): void {
@@ -269,8 +269,8 @@ export class ZilaConnection {
   }
 
   /**
-   * Calls an async callback on the serverside. Gets a value back from the serverside or just waits for the eventhandler to finish.
-   * @param {string} identifier The callback's name on the serverside.
+   * Calls an async callback on the server-side. Gets a value back from the server-side or just waits for the eventhandler to finish.
+   * @param {string} identifier The callback's name on the server-side.
    * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
    * @returns {Promise<any>}
    */
@@ -287,7 +287,7 @@ export class ZilaConnection {
   }
 
   /**
-   * Sync cookies to the serverside.
+   * Sync cookies to the server-side.
    */
   /* istanbul ignore next */
   public syncCookies() {
@@ -299,7 +299,7 @@ export class ZilaConnection {
    *
    * EventListeners are made for local events only like for example: `onStatusChanged` that runs when the WebSocket client's connection status gets changed.
    *
-   * IF YOU WANT TO REGISTER A **MessageHandler**, THAT RUNS WHEN THE **SERVERSIDE** ASKS FOR IT, YOU **SHOULD** USE `registerMessageHandler`
+   * IF YOU WANT TO REGISTER A **MessageHandler**, THAT RUNS WHEN THE **server-side** ASKS FOR IT, YOU **SHOULD** USE `registerMessageHandler`
    * @param eventType
    * @param callback
    */
@@ -339,7 +339,7 @@ export class ZilaConnection {
   /**
    * Registers an EventListener that can be called only once.
    *
-   * If you want to register a MessageListener (what is called by serverside) only once you should use `onceMessageHandler`
+   * If you want to register a MessageListener (what is called by server-side) only once you should use `onceMessageHandler`
    * @param eventType
    * @param callback
    */
@@ -355,7 +355,7 @@ export class ZilaConnection {
   }
 
   /**
-   * Registers an eventhandler on the clientside that'll run when the server asks for it.
+   * Registers an eventhandler on the client-side that'll run when the server asks for it.
    * Can get overrided with using the same identifier.
    * @param identifier The eventhandler's name. **Must not start with `[ZilaWS]:`!**
    * @param callback The eventhandler.
@@ -365,7 +365,7 @@ export class ZilaConnection {
   }
 
   /**
-   * Removes a clientside MessageHandler.
+   * Removes a client-side MessageHandler.
    * @param identifier
    */
   public removeMessageHandler(identifier: string): void {
