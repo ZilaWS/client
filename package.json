@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package",
   "name": "zilaws-client",
   "version": "1.1.3",
-  "description": "ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between clientside and serverside using eventhandlers and async waiters.",
+  "description": "ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between client-side and server-side using eventhandlers and async waiters.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
@@ -10,6 +10,7 @@
   "browser": "dist/umd/index.js",
   "scripts": {
     "build": "npm run format:fix && npm run test:cov-build && npm run format:fix && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
+    "forcebuild": "npm run format:fix && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
     "build:cjs": "rimraf ./dist/cjs && tsc -p config/tsconfig.cjs.json",
     "build:esm": "rimraf ./dist/esm && tsc -p config/tsconfig.esm.json",
     "build:umd": "rimraf ./dist/umd && webpack --config config/webpack.config.js",

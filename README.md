@@ -1,5 +1,5 @@
 # ZilaWS Client
-### ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between clientside and serverside using eventhandlers and async waiters.
+### ZilaWS is a blazingly fast and very lightweight library that provides an extremely easy-to-use way to transmit data via websockets between client-side and server-side using eventhandlers and async waiters.
 
 
 <div style="text-align: center;">
@@ -24,7 +24,7 @@
 
 <h2 style="text-align: center">Looking for the <a href="https://www.npmjs.com/package/zilaws-server" target="_blank" rel="noopener noreferrer">zilaws-server</a> package?</h2>
 
-<p>ZilaWS can estabilish WS connection to a non zilaws server, but won't work as expected.</p>
+<p>ZilaWS can establish WS connection to a non zilaws server, but won't work as expected.</p>
 
 <h2>
 Waiter example
