@@ -4,3 +4,5 @@
   - New local events:
     - onCookieSet
     - onCookieDelete
+  - Cookie syncing: `syncCookies`
+  

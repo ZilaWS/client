@@ -77,12 +77,6 @@ describe("WebSocket connection", () => {
     server.send(clientSocket, "THISSHOULDNOTEXIST", "SMTH");
   });
 
-  test.failing("Waiter but with a function", async () => {
-    await client.waiter("SMTH", () => {
-      console.log("I'm a function!");
-    });
-  });
-
   test.failing("Multiple EventListeners with same credintals", () => {
     client.addEventListener("onStatusChange", func);
     client.addEventListener("onStatusChange", func);

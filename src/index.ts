@@ -151,14 +151,6 @@ export class ZilaConnection {
     this.errorCallback = errorCallback;
     this._status = WSStatus.OPENING;
 
-    /*this.connection.onerror = async () => {
-      this.status = WSStatus.ERROR;
-
-      this.errorCallback?.call(undefined);
-
-      
-    };*/
-
     this.connection.onopen = () => {
       this.status = WSStatus.OPEN;
     };
@@ -388,10 +380,7 @@ export class ZilaConnection {
   public onceMessageHandler(identifier: string, callback: ZilaWSCallback): void {
     this.callbacks[identifier] = async (...args: any[]) => {
       this.removeMessageHandler(identifier);
-      //const ret = callback(...args);
-
       const ret = await Promise.resolve(callback(...args));
-
       return ret;
     };
   }
@@ -453,8 +442,3 @@ export class ZilaConnection {
 export async function connectTo(wsUrl: string, errorCallback?: errorCallbackType): Promise<ZilaConnection> {
   return ZilaConnection.connectTo(wsUrl, errorCallback);
 }
-// const exporter = {
-//   connectTo: connectTo,
-//   WSStatus: WSStatus,
-//   ZilaConnection: ZilaConnection,
-// };
