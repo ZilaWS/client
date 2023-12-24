@@ -83,7 +83,7 @@ describe("WebSocket connection", () => {
 
   test("Client Async WaiterTimeout", async () => {
     server.setMessageHandler("WaiterTimeout", (socket, data: string) => {
-      expect(data).toEqual("sampleData")
+      expect(data).toEqual("sampleData");
       return data + " success";
     });
 
