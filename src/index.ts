@@ -283,7 +283,7 @@ export class ZilaConnection {
 
       resolve(
         Promise.any([
-          new Promise(r => {
+          new Promise((r) => {
             this.setMessageHandler(uuid, (args: any[]): void => {
               clearTimeout(timeout);
               this.removeMessageHandler(uuid);
@@ -294,7 +294,7 @@ export class ZilaConnection {
             timeout = setTimeout(() => {
               _r(undefined);
             }, this.maxWaiterTime);
-          })
+          }),
         ]) as Promise<T | undefined>
       );
 
@@ -303,38 +303,38 @@ export class ZilaConnection {
   }
 
   /**
-  * Calls an eventhandler on the server-side for the specified client. Gets a value of T type back from the client or just waits for the eventhandler to finish.
-  * @param {string} identifier The callback's name on the client-side.
-  * @param {number} maxWaitingTime The maximum time this waiter will wait for the client.
-  * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
-  * @returns {Promise<T | undefined>}
-  */
-    public waiterTimeout<T>(identifier: string, maxWaitingTime: number, ...data: any[]): Promise<T | undefined> {
-      return new Promise(async (resolve) => {
-        const uuid = randomUUID();
-  
-        let timeout: NodeJS.Timeout;
-  
-        resolve(
-          Promise.any([
-            new Promise(r => {
-              this.setMessageHandler(uuid, (args: any[]): void => {
-                clearTimeout(timeout);
-                this.removeMessageHandler(uuid);
-                r(args);
-              });
-            }),
-            new Promise((_r) => {
-              timeout = setTimeout(() => {
-                _r(undefined);
-              }, maxWaitingTime);
-            })
-          ]) as Promise<T | undefined>
-        );
-  
-        this.connection!.send(this.getMessageJSON(identifier, data, uuid));
-      });
-    }
+   * Calls an eventhandler on the server-side for the specified client. Gets a value of T type back from the client or just waits for the eventhandler to finish.
+   * @param {string} identifier The callback's name on the client-side.
+   * @param {number} maxWaitingTime The maximum time this waiter will wait for the client.
+   * @param {any|undefined} data Arguments that shall be passed to the callback as parameters (optional)
+   * @returns {Promise<T | undefined>}
+   */
+  public waiterTimeout<T>(identifier: string, maxWaitingTime: number, ...data: any[]): Promise<T | undefined> {
+    return new Promise(async (resolve) => {
+      const uuid = randomUUID();
+
+      let timeout: NodeJS.Timeout;
+
+      resolve(
+        Promise.any([
+          new Promise((r) => {
+            this.setMessageHandler(uuid, (args: any[]): void => {
+              clearTimeout(timeout);
+              this.removeMessageHandler(uuid);
+              r(args);
+            });
+          }),
+          new Promise((_r) => {
+            timeout = setTimeout(() => {
+              _r(undefined);
+            }, maxWaitingTime);
+          }),
+        ]) as Promise<T | undefined>
+      );
+
+      this.connection!.send(this.getMessageJSON(identifier, data, uuid));
+    });
+  }
 
   /**
    * Sync cookies to the server-side.
