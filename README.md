@@ -9,7 +9,7 @@ ZilaWS is a blazingly fast and very lightweight library that provides an extreme
 ![coverage label for lines of code](./.coverage-badges/badge-lines.svg)
 ![coverage label for statements](./.coverage-badges/badge-statements.svg)
 
-<img src="logo.png" width="240">
+<img src="logo.png" alt="ZilaWS logo" width="240">
 
 ## [Documentation](https://zilaws.com)
 
