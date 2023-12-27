@@ -15,7 +15,7 @@ ZilaWS is a blazingly fast and very lightweight library that provides an extreme
 
 ## Looking for the [zilaws-server](https://www.npmjs.com/package/zilaws-server) package?</h2>
 
-ZilaWS can establish WS connection to a non zilaws server, but won't work as expected.
+ZilaWS can establish WS connection to a non-zilaws server, but won't work as expected.
 
 ## Waiters
 
