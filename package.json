@@ -76,7 +76,7 @@
     "zilaws-server": "^2.0.0"
   },
   "dependencies": {
-    "uuid": "^9.0.0",
+    "uuid": "^9.0.1",
     "ws": "^8.14.2"
   }
 }
