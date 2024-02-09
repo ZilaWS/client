@@ -1,1 +1,1 @@
-* README typo fix
+* Dependency upgrades
