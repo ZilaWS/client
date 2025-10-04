@@ -47,20 +47,6 @@ interface ICallableLocalEvents {
    * @returns
    */
   onRawMessageRecieved: (message: string) => void;
-
-  /**
-   * Runs when the server sends down one or multiple new cookies.
-   * @param cookieString
-   * @returns
-   */
-  onCookieSet: (cookieString: string) => void;
-
-  /**
-   * Runs when the server deletes a cookie
-   * @param cookieName
-   * @returns
-   */
-  onCookieDelete: (cookieName: string) => void;
 }
 
 export class ZilaConnection {
@@ -95,6 +81,7 @@ export class ZilaConnection {
    * connectTo("wss://127.0.0.1:82")
    * @param wsUrl The URL which the server can be accessed with.
    * @param errorCallback This callback will be executed if an error occurs.
+   * @param [allowSelfSignedCert=false] Allow connecting to WS servers which use self signed SSL/TLS certificates. This is only relevant for testing with Bun.
    * @returns {Promise<ZilaConnection>}
    */
   public static async connectTo(
@@ -103,6 +90,8 @@ export class ZilaConnection {
     allowSelfSignedCert = false
   ): Promise<ZilaConnection> {
     return new Promise(async (resolve, reject) => {
+      if (allowSelfSignedCert) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
       let ws: WebSocket | globalThis.WebSocket | undefined;
 
       try {
@@ -187,28 +176,7 @@ export class ZilaConnection {
 
     /* istanbul ignore next */
     if (msgObj.identifier[0] == "@") {
-      if (msgObj.identifier == "@SetCookie") {
-        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
-          const cookieString = msgObj.message as unknown as string;
-          document.cookie = cookieString;
-
-          if (this.localEventCallbacks.onCookieSet)
-            for (const cb of this.localEventCallbacks.onCookieSet) {
-              cb(cookieString);
-            }
-        }
-      } else if (msgObj.identifier == "@DelCookie") {
-        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
-          const cookieName = msgObj.message as unknown as string;
-          document.cookie = `${cookieName}=; expires=${new Date(0)}; path=/;`;
-
-          if (this.localEventCallbacks.onCookieDelete)
-            for (const cb of this.localEventCallbacks.onCookieDelete) {
-              cb(cookieName);
-            }
-        }
-      }
-
+      // Previously handled built-in cookie sync events here. Cookie syncing removed.
       return;
     }
 
@@ -336,13 +304,7 @@ export class ZilaConnection {
     });
   }
 
-  /**
-   * Sync cookies to the server-side.
-   */
-  /* istanbul ignore next */
-  public syncCookies() {
-    this.bSend("SyncCookies", document.cookie);
-  }
+  // Cookie syncing removed. Cookies are only read by server during initial upgrade.
 
   /**
    * Registers a new EventListener.
@@ -473,7 +435,7 @@ export class ZilaConnection {
         }
       });
 
-      this.connection.close();
+      this.connection.close(CloseCodes.NORMAL, "The connection has been terminated by the user.");
     });
   }
 }
@@ -489,6 +451,10 @@ export class ZilaConnection {
  * @param errorCallback This callback will be executed if an error occurs.
  * @returns {Promise<ZilaConnection>}
  */
-export async function connectTo(wsUrl: string, errorCallback?: errorCallbackType): Promise<ZilaConnection> {
-  return ZilaConnection.connectTo(wsUrl, errorCallback);
+export async function connectTo(
+  wsUrl: string,
+  errorCallback?: errorCallbackType,
+  allowSelfSignedCert = false
+): Promise<ZilaConnection> {
+  return ZilaConnection.connectTo(wsUrl, errorCallback, allowSelfSignedCert);
 }

@@ -18,5 +18,6 @@
     "json-summary",
     "text",
     "lcov"
-  ]
+  ],
+  "testPathIgnorePatterns": ["/node_modules/", ".*\\.puppeteer\\.test\\.ts$"]
 }
