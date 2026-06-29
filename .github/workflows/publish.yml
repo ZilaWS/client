@@ -3,7 +3,7 @@ name: Release & Publish
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 # Trusted publishing (OIDC) needs id-token: write. contents: write is needed so
 # the workflow can create the GitHub release. No npm token is used; npm exchanges
@@ -18,6 +18,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-22.04
+    env:
+      PUPPETEER_CACHE_DIR: ${{ github.workspace }}/.cache/puppeteer
     steps:
       - name: Checkout client
         uses: actions/checkout@v4
@@ -86,6 +88,7 @@ jobs:
             libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
             libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
             libgbm1 libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0
+          rm -rf "$PUPPETEER_CACHE_DIR/chrome"
           bunx puppeteer browsers install chrome
 
       - name: Run server tests (bun)
