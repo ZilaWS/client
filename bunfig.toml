@@ -1,0 +1,6 @@
+[test]
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = [
+  "**/dist/**/*.*js",
+]
+concurrentTestGlob = "**/*!(puppeteer).test.ts" 
