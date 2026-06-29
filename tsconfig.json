@@ -74,6 +74,7 @@
     "../**/*.test.ts",
     "../**/*.spec.ts",
     "../jest*.config.*",
-    "../jest-puppeteer.config.*"
+    "../jest-puppeteer.config.*",
+    "node_modules/**/*"
   ]
 }
